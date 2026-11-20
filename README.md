@@ -1,175 +1,133 @@
-# Proj-SRTandWRS-showcase
-# Speech Audiometry (Project Name TBD)
+# Automating Speech Audiometry in Pakistani Languages
 
-A web application to automate speech audiometry testing—Speech Recognition Threshold (SRT) and Word Recognition Score (WRS)—designed for Urdu first, with support for other languages later.
+> A research project to automate speech audiometry (SRT and WRS) using validated Urdu word lists, and to build matching word lists for other Pakistani languages.
 
-- **SRT (Speech Recognition Threshold)**: Adaptive up-down procedure targeting the presentation level (dB) where ~50% of words are repeated correctly.
-- **WRS (Word Recognition Score)**: Fixed-level word list presentation to measure word recognition percentage.
-- **Dual Presentation Modes**:
-  - `AUTO`: Adaptive engine adjusts presentation level based on patient responses.
-  - `MANUAL`: Clinician sets and adjusts presentation levels directly.
-- **Persistence**: PostgreSQL database (hosted on Supabase) via Prisma to record finished sessions and individual trial logs.
-- **Audio Output**: Web Audio API tone synthesis with digital gain control (placeholder until equipment calibration).
+**Role:** Project Lead · **Supervisor:** Dr Shibli Nisar · **Status:** Active research (software prototype built; data collection ongoing)
+
+> The source code lives in a private repository because the project is in the ethics-approval and data-collection phase. This repo is a public overview of the project, its design, and my role in it. No participant data or clinical recordings are shared here.
 
 ---
 
-## Installation & Setup
+## The Problem
 
-> **Warning**: Use test data only until ethics approval is confirmed.
+Speech audiometry measures how well a person hears *speech*, not just tones. In Pakistan, it has a gap:
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+- Urdu speakers are routinely tested with **English word lists**, even though English is not the first language of most patients, which can distort results.
+- Testing is **manual**: a trained audiologist has to run every step of every session.
+- Validated Urdu lists only appeared in **2025**, and other regional languages have none.
 
-2. **Set up environment variables**:
-   Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-   Configure your Supabase credentials in `.env`:
-   - `DATABASE_URL`: Transaction pooler URL (port 6543, with `?pgbouncer=true`) for runtime queries.
-   - `DIRECT_URL`: Direct connection URL (port 5432) for running migrations.
-   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL (`https://<project-ref>.supabase.co`).
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase public anonymous/publishable key only (never use service role key).
+## Two Tests
 
-3. **Run database migrations**:
-   Apply migrations to your PostgreSQL database:
-   ```bash
-   npx prisma migrate dev
-   ```
+| Test | Question it answers | How it works | Result |
+|---|---|---|---|
+| **SRT** (Speech Recognition Threshold) | How quiet can speech be before it is lost? | Two-syllable words; the level moves up and down to find the point where ~50% are repeated correctly | A level in dB HL |
+| **WRS** (Word Recognition Score) | How clearly is speech understood at a comfortable level? | One-syllable words at a fixed level | Percent correct |
 
-4. **Verify database connection**:
-   Check connectivity and table row counts:
-   ```bash
-   npm run db:check
-   ```
+## What We Build On
 
-5. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser. Available routes include:
-   - `/srt`: Speech Recognition Threshold test
-   - `/wrs`: Word Recognition Score test
-   - `/sessions`: List of saved test sessions
-   - `/login`: Clinician authentication form
+The project uses the Urdu SRT and WRS word lists published by Tanveer & Rauf (2025) in the *Journal of Speech, Language, and Hearing Research* (30 two-syllable SRT words, 34 one-syllable WRS words, validated with 88 children).
+DOI: [10.1044/2025_JSLHR-24-00118](https://doi.org/10.1044/2025_JSLHR-24-00118)
+
+That work leaves open questions: normal-hearing children only, a single female voice, no test-retest data, and no automated procedure. This project addresses the last gap and extends the method to more languages.
 
 ---
 
-## Clinician Authentication & Account Management
+## Project Structure: Two Streams
 
-Authentication is managed server-side using Supabase Auth (`@supabase/ssr`). Open public registration is disallowed.
+### Stream A: Automating the Test
+Software that runs SRT and WRS with the Urdu lists and scores the results.
 
-### 1. Creating and Inviting Clinician Accounts
-Clinician accounts must be provisioned directly by an administrator via the Supabase dashboard:
-1. Navigate to your project in the **Supabase Dashboard**.
-2. Open **Authentication** from the sidebar, then select **Users**.
-3. Click **Add user** and select either:
-   - **Create user**: Manually enter the clinician's email address and assign an initial password.
-   - **Invite user**: Send an email invitation link for the clinician to establish credentials.
+- **Phase 1:** The software plays calibrated recordings and sets levels by rule; the audiologist marks each response. *(Prototype complete.)*
+- **Phase 2:** The system captures and scores the patient's response itself, replacing manual marking.
+- **Validation:** Pilot comparison against manual testing.
 
-### 2. Disabling Open Sign-Up
-To protect participant hearing records and ensure only authorized clinical staff can log in, public sign-ups must be disabled:
-1. In the Supabase Dashboard, go to **Authentication > Providers > Email**.
-2. Turn OFF (disable) **"Allow new users to sign up"** (or uncheck "Enable Sign Up").
-3. Save the configuration.
+| Manual | Automated |
+|---|---|
+| Audiologist sets the level | Software sets the level by rule |
+| Word plays in headphones | Calibrated word plays |
+| Patient repeats the word | Patient responds |
+| Audiologist marks right or wrong | Software scores the response |
+| Audiologist picks the next level | Software picks the next level |
 
-> **Security Note**: Never expose or configure a `SUPABASE_SERVICE_ROLE_KEY` in this application. All client and server operations rely strictly on the scoped `NEXT_PUBLIC_SUPABASE_ANON_KEY` combined with user JWT verification.
+Same words, same recordings. Only *who runs the steps* changes.
 
----
+### Stream B: Word Lists for Other Languages
+SRT and WRS lists for Punjabi, Pashto, Sindhi, and Balochi, built with the same method used for Urdu:
 
-## Deploying to Vercel
+1. Select words from a language corpus
+2. Record one clear native speaker
+3. Test familiarity with native listeners
+4. Measure each word at many levels
+5. Keep the words with steep, similar slopes
 
-Follow these steps when deploying the project to Vercel:
-
-1. **Set Environment Variables**:
-   In your Vercel Project Settings under **Environment Variables**, configure the following for both **Production** and **Preview** environments:
-   - `DATABASE_URL`: Supabase transaction pooler URL (port 6543, with `?pgbouncer=true`).
-   - `DIRECT_URL`: Supabase direct connection URL (port 5432).
-   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL (`https://<project-ref>.supabase.co`).
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase public anonymous key.
-
-2. **URL-Encode Special Characters in Database Password**:
-   If your database password contains special characters (such as `@`, `:`, `/`, `?`, `#`, `[`, `]`, `%`), ensure they are properly URL-encoded (e.g. `%40` for `@`, `%3A` for `:`) in both `DATABASE_URL` and `DIRECT_URL` to prevent connection string parsing failures.
-
-3. **Run Migrations Before First Deploy**:
-   Vercel build pipelines do not run database migrations. Run migrations from your local machine against the Supabase database before your initial deployment:
-   ```bash
-   npx prisma migrate deploy
-   ```
-
-4. **Redeploy After Variable Updates**:
-   Always redeploy your project in Vercel after modifying environment variables to ensure the new values are applied to runtime instances.
+Work begins with a feasibility check (is there a corpus, are linguists and a recording space available?), then one language at a time.
 
 ---
 
-## Running Tests
+## Software Overview
 
-Run the Vitest test suite (single-run mode):
-```bash
-npm test
-```
+**Features of the prototype**
 
----
+- **SRT** using an adaptive up-down staircase
+- **WRS** using fixed-level word lists with a seeded randomizer
+- **Two presentation modes:** `AUTO` (adaptive engine adjusts the level) and `MANUAL` (clinician sets the level)
+- **Session logging** of every trial for later analysis
+- **Clinician-only access** (no open registration)
+- **Calibrated audio output** with a hard cap on maximum gain
 
-## Running Simulation Experiments
+**Design choices worth noting**
 
-Execute experiments using the `npm run exp` script:
+- The audiometric logic is a **pure, framework-free engine**, separate from the UI, audio, and database code, so it can be tested on its own.
+- The adaptive staircase is verified with **Monte Carlo simulation**: a simulated listener with a known threshold is run through the engine thousands of times, to check that the procedure recovers the true value and to compare step sizes and stopping rules.
+- Unit-tested with Vitest.
 
-- **Compare step sizes across starting levels**:
-  ```bash
-  npm run exp experiments/compare-step-sizes.ts
-  ```
+**Stack:** TypeScript · Next.js · React · Web Audio API · PostgreSQL · Prisma · Vitest
 
-- **Trace an individual staircase session trial by trial**:
-  ```bash
-  npm run exp experiments/trace-session.ts
-  ```
-
-- **Compare stopping rules and reversal limits**:
-  ```bash
-  npm run exp experiments/compare-stopping-rules.ts
-  ```
+<!-- Add screenshots below: test screen, session history, simulation plot -->
+<!-- ![SRT test screen](docs/srt-screen.png) -->
+<!-- ![Simulation results](docs/simulation.png) -->
 
 ---
 
-## Folder Layout
+## My Role
 
-- **`src/engine/`**: Pure audiometric logic with no React, DOM, audio, database, or network code.
-  - `staircase.ts`: Adaptive up-down staircase implementation for SRT.
-  - `wrs.ts`: Word Recognition Score test runner and seeded list randomizer.
-  - `session.ts`: Session state machine supporting both `auto` and `manual` modes.
-  - `simulation.ts`: Seeded Mulberry32 PRNG and logistic `SimulatedListener` for Monte Carlo verification.
-- **`src/audio/`**: Web Audio API playback.
-  - `player.ts`: Generates tone bursts and calculates linear gain via `dbToGain` with strict maximum gain clamping.
-- **`src/config/`**: System configuration.
-  - `calibration.ts`: Transducer calibration offsets and reference level definitions (placeholder values).
-- **`src/data/`**: Data assets.
-  - `placeholder-words.ts`: Hardcoded placeholder word identifier lists (`word-01` ... `word-34`).
-- **`src/app/`**: Next.js App Router.
-  - `page.tsx`: Home landing page.
-  - `srt/page.tsx`: Interactive SRT test interface.
-  - `wrs/page.tsx`: Interactive WRS test interface.
-  - `sessions/page.tsx`: Saved sessions history table.
-  - `api/sessions/`: REST route handlers for saving and querying test sessions.
-- **`src/lib/`**: Shared utilities.
-  - `prisma.ts`: Prisma Client singleton.
-  - `validation.ts`: Request validation for session persistence.
-- **`experiments/`**: Simulation scripts for evaluating clinical step sizes, stopping rules, and staircase dynamics.
+<!-- Fill in with specifics and keep it accurate. Examples of the level of detail to aim for: -->
 
----
+- Lead the project, which has two streams (test automation and regional-language word lists), and coordinate the team
+- Secured faculty supervision and presented the project to the supervisor's MS class
+- Reached out to the authors of the source paper and the organisation that built the Urdu lists, and prepared the formal request for the word recordings
+- Defined the project scope, phases, and risks (see below)
+- Own the clinical and research decisions behind the software: response method, start level, step size, stopping rule, and calibration approach
+- Software developed in collaboration with **[Collaborator Name]** ([GitHub](https://github.com/))
 
-## Open Decisions
+## Scope and Limitations
 
-The following items are placeholders or pending clinical specification:
+| In scope | Not yet |
+|---|---|
+| SRT and WRS in quiet | Sentence and noise tests |
+| Normal-hearing listeners first | Clinical patients |
+| Urdu first, then one more language | |
 
-1. **Threshold formula**: Exact clinical calculation formula for threshold estimation (particularly for manual presentation mode).
-2. **Start level**: Clinical default starting level in dB.
-3. **Step size**: Default presentation step size (dB) per trial.
-4. **Stopping rule**: Target stopping criteria (reversal count vs. maximum trial budget).
-5. **Discarded reversals**: Number of initial reversal turnarounds excluded from threshold averaging.
-6. **Audible range**: Minimum and maximum allowable presentation levels in dB.
-7. **Calibration method**: Method and equipment standards (e.g. artificial ear/coupler and sound level meter) for calibrating digital output to true dB HL.
-8. **Meaning of "33 words" in SRT notes**: Clarification needed on the source and role of the "33 words" referenced in project notes.
-9. **Project name**: Final project title to replace the working placeholder.
+**Open risks:** recording permissions pending, audiometer access and calibration, ethics approval required before any testing, and the limits of the Urdu lists (children only, one voice, no test-retest data).
+
+## Roadmap
+
+| Phase | Stream A: Automation | Stream B: Languages |
+|---|---|---|
+| 1. Foundation | Recordings, permissions, protocol | Pick one language, feasibility check |
+| 2. Build | Working prototype, calibration | Word selection and recording |
+| 3. Test | Pilot against manual testing | Familiarity testing |
+| 4. Share | Paper or poster, open code | Slope testing, report |
+
+## Ethics and Data
+
+The software currently runs on placeholder test data only. No testing with participants will take place before ethics approval is confirmed.
+
+## References
+
+- Tanveer S, Rauf S. Development of Urdu Speech Audiometry Material for the Deaf and Hard of Hearing Community. *J Speech Lang Hear Res.* 2025;68(6):2900-2914. [doi:10.1044/2025_JSLHR-24-00118](https://doi.org/10.1044/2025_JSLHR-24-00118)
+- Ijaz T, Kiyani HS, Saqulain G. *Annals of King Edward Medical University.* 2023;23(4):323-328.
+
+## Contact
+
+**MARYAM ABBASI** · www.linkedin.com/in/maryam-abbasi-49933b361 · mryamabbasiii6@gmail.com
