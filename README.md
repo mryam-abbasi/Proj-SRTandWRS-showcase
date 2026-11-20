@@ -83,22 +83,23 @@ Work begins with a feasibility check (is there a corpus, are linguists and a rec
 
 **Stack:** TypeScript · Next.js · React · Web Audio API · PostgreSQL · Prisma · Vitest
 
-<!-- Add screenshots below: test screen, session history, simulation plot -->
-<!-- ![SRT test screen](docs/srt-screen.png) -->
-<!-- ![Simulation results](docs/simulation.png) -->
+<img width="1470" height="830" alt="image" src="https://github.com/user-attachments/assets/e2944c1a-24ee-4400-bb0c-9ef34ebf026a" />
+<img width="1470" height="828" alt="image" src="https://github.com/user-attachments/assets/13508718-7aed-4a49-9701-9807fd1571bd" />
+<img width="1468" height="830" alt="image" src="https://github.com/user-attachments/assets/de3e1641-f20a-4cc0-83cb-15f9b2f3feaa" />
+
+
+
 
 ---
 
 ## My Role
-
-<!-- Fill in with specifics and keep it accurate. Examples of the level of detail to aim for: -->
 
 - Lead the project, which has two streams (test automation and regional-language word lists), and coordinate the team
 - Secured faculty supervision and presented the project to the supervisor's MS class
 - Reached out to the authors of the source paper and the organisation that built the Urdu lists, and prepared the formal request for the word recordings
 - Defined the project scope, phases, and risks (see below)
 - Own the clinical and research decisions behind the software: response method, start level, step size, stopping rule, and calibration approach
-- Software developed in collaboration with **[Collaborator Name]** ([GitHub](https://github.com/))
+- Software developed in collaboration with **Waleed Malik** ([GitHub](https://github.com/Waleed-Malik))
 
 ## Scope and Limitations
 
@@ -119,9 +120,6 @@ Work begins with a feasibility check (is there a corpus, are linguists and a rec
 | 3. Test | Pilot against manual testing | Familiarity testing |
 | 4. Share | Paper or poster, open code | Slope testing, report |
 
-## Ethics and Data
-
-The software currently runs on placeholder test data only. No testing with participants will take place before ethics approval is confirmed.
 
 ## References
 
